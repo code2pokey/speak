@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#7868c8">
+  <meta name="description" content="A cheerful public-speaking question checklist for children, families, and classrooms.">
+  <title>Brave Voices — Public Speaking Practice</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="app.js?v=2" defer></script>
+</head>
+<body>
+  <div class="page-art" aria-hidden="true"></div>
+
+  <header class="hero">
+    <nav class="topbar" aria-label="Main navigation">
+      <a class="brand" href="#top" aria-label="Brave Voices home">
+        <span class="brand-mark" aria-hidden="true">🎤</span>
+        <span>Brave Voices</span>
+      </a>
+      <a class="jump-link" href="#questions">Explore questions <span aria-hidden="true">↓</span></a>
+    </nav>
+
+    <div id="top" class="hero-copy">
+      <p class="eyebrow">Speak • Listen • Grow</p>
+      <h1>Every great speaker starts with one brave answer.</h1>
+      <p>Pick a prompt, share your ideas, and check it off when you are done. Your progress stays saved on this browser.</p>
+      <div class="hero-actions">
+        <button id="random-question" class="button button-primary" type="button">Surprise me</button>
+        <a class="button button-soft" href="#questions">Browse all prompts</a>
+      </div>
+    </div>
+
+    <div class="hero-stats" aria-label="Question progress summary">
+      <div><strong id="hero-total">—</strong><span>prompts</span></div>
+      <div><strong id="hero-done">0</strong><span>completed</span></div>
+      <div><strong id="hero-left">—</strong><span>ready to try</span></div>
+    </div>
+  </header>
+
+  <main id="questions" class="content-shell">
+    <section class="progress-panel" aria-labelledby="progress-title">
+      <div>
+        <p class="section-kicker">Your speaking journey</p>
+        <h2 id="progress-title"><span id="progress-percent">0%</span> complete</h2>
+        <p id="progress-message">Choose a question and give it your best try.</p>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Questions completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span id="progress-fill"></span>
+      </div>
+    </section>
+
+    <section class="toolbox" aria-label="Question filters">
+      <label class="search-field" for="search-input">
+        <span aria-hidden="true">⌕</span>
+        <input id="search-input" type="search" placeholder="Search questions…" autocomplete="off">
+      </label>
+
+      <label class="category-field" for="category-select">
+        <span class="sr-only">Choose a category</span>
+        <select id="category-select">
+          <option value="all">All categories</option>
+        </select>
+      </label>
+
+      <div class="filter-tabs" role="group" aria-label="Completion filter">
+        <button class="filter-tab is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter-tab" type="button" data-filter="open" aria-pressed="false">To practice</button>
+        <button class="filter-tab" type="button" data-filter="done" aria-pressed="false">Completed</button>
+      </div>
+
+      <button id="clear-progress" class="text-button" type="button">Reset progress</button>
+    </section>
+
+    <div class="result-line">
+      <p id="result-count" aria-live="polite">Loading questions…</p>
+      <p class="save-note"><span aria-hidden="true">✓</span> Saved automatically</p>
+    </div>
+
+    <div id="question-groups" class="question-groups" aria-busy="true"></div>
+
+    <section id="empty-state" class="empty-state" hidden>
+      <span aria-hidden="true">🔎</span>
+      <h2>No questions found</h2>
+      <p>Try another search or choose a different category.</p>
+      <button id="clear-filters" class="button button-primary" type="button">Clear filters</button>
+    </section>
+
+    <section id="load-error" class="empty-state error-state" hidden>
+      <span aria-hidden="true">🛠️</span>
+      <h2>The questions could not be loaded</h2>
+      <p>Open this project through a local server instead of double-clicking the HTML file.</p>
+      <code>python -m http.server 8767</code>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Brave Voices</strong>
+    <p>Made for curious minds, kind listeners, and growing confidence.</p>
+  </footer>
+
+  <dialog id="random-dialog" class="random-dialog">
+    <button id="close-dialog" class="dialog-close" type="button" aria-label="Close">×</button>
+    <p class="section-kicker">Your surprise prompt</p>
+    <h2 id="random-dialog-question"></h2>
+    <p id="random-dialog-category" class="dialog-category"></p>
+    <label class="random-complete" for="random-dialog-check">
+      <input id="random-dialog-check" class="question-check" type="checkbox">
+      <span>Mark this question complete</span>
+    </label>
+    <div class="dialog-actions">
+      <button id="another-random-question" class="button button-primary" type="button">Pick another</button>
+      <button id="show-random-question" class="button button-soft" type="button">Find it in the list</button>
+    </div>
+  </dialog>
+
+  <noscript>This checklist needs JavaScript to load questions and save progress.</noscript>
+</body>
+</html>
