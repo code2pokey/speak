@@ -189,8 +189,13 @@ function parseQuestions(source) {
     }
 
     if (pending) {
-      pending.text += ` ${line}`;
-      return;
+      const previousLineIsIncomplete = !/[.!?…“”'\")\]]$/.test(pending.text);
+      if (previousLineIsIncomplete) {
+        pending.text += ` ${line}`;
+        return;
+      }
+
+      commit();
     }
 
     pending = { category, text: line };
