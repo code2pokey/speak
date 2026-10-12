@@ -348,9 +348,8 @@ function renderQuestions() {
 }
 
 function chooseRandomQuestion() {
-  const pool = visibleQuestions().filter((question) => !completed.has(question.id));
-  const fallbackPool = visibleQuestions().length ? visibleQuestions() : questions;
-  const choices = pool.length ? pool : fallbackPool;
+  const unfinishedQuestions = questions.filter((question) => !completed.has(question.id));
+  const choices = unfinishedQuestions.length ? unfinishedQuestions : questions;
   if (!choices.length) return;
   randomSelection = choices[Math.floor(Math.random() * choices.length)];
   randomDialogQuestion.textContent = randomSelection.text;
