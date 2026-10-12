@@ -164,7 +164,8 @@ function parseQuestions(source) {
     const explicitHeading = line.match(/^#{1,6}\s+(.+)$/) || line.match(/^\[([^\]]+)\]$/);
     if (explicitHeading) {
       commit();
-      category = repairText(explicitHeading[1]);
+      const headingLabel = repairText(explicitHeading[1]);
+      category = headings.get(normalizeHeading(headingLabel)) || headingLabel;
       return;
     }
 
