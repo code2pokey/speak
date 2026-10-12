@@ -1,6 +1,7 @@
 const STORAGE_KEY = 'brave-voices-completed-v1';
 
 const headings = new Map([
+  ['creative thinking', 'Creative Thinking'],
   ['debating questions for kids', 'Debating Questions for Kids'],
   ['fun communication challenges', 'Communication Challenges'],
   ['alternatives to “how was your day?”', 'Beyond “How Was Your Day?”'],
@@ -45,6 +46,9 @@ const skippedPrefixes = [
   'some of the best fun debate topics',
   'these funny issues to debate',
 ];
+const legacyCompletionAliases = new Map([
+  ['are zoos ethical', ['q-j54ffb']],
+]);
 
 const groupsElement = document.querySelector('#question-groups');
 const emptyState = document.querySelector('#empty-state');
@@ -66,6 +70,7 @@ let questions = [];
 let completionFilter = 'all';
 let randomSelection = null;
 let completed = readCompleted();
+let duplicatesRemoved = 0;
 
 function repairText(value) {
   const replacements = new Map([
@@ -90,6 +95,16 @@ function stableHash(value) {
   return (hash >>> 0).toString(36);
 }
 
+function canonicalQuestion(value) {
+  return repairText(value)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
 function readCompleted() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -105,22 +120,36 @@ function saveCompleted() {
 
 function parseQuestions(source) {
   const parsed = [];
-  const seen = new Map();
+  const legacyOccurrences = new Map();
+  const byCanonicalText = new Map();
   let category = 'Creative Thinking';
   let pending = null;
+  duplicatesRemoved = 0;
 
   const commit = () => {
     if (!pending) return;
     const text = repairText(pending.text);
     if (text) {
-      const signature = `${pending.category}\u0000${text}`;
-      const occurrence = seen.get(signature) || 0;
-      seen.set(signature, occurrence + 1);
-      parsed.push({
-        id: `q-${stableHash(`${signature}\u0000${occurrence}`)}`,
-        category: pending.category,
-        text,
-      });
+      const legacySignature = `${pending.category}\u0000${text}`;
+      const occurrence = legacyOccurrences.get(legacySignature) || 0;
+      legacyOccurrences.set(legacySignature, occurrence + 1);
+      const legacyId = `q-${stableHash(`${legacySignature}\u0000${occurrence}`)}`;
+      const canonical = canonicalQuestion(text);
+      const existing = byCanonicalText.get(canonical);
+
+      if (existing) {
+        existing.legacyIds.push(legacyId);
+        duplicatesRemoved += 1;
+      } else if (canonical) {
+        const question = {
+          id: `question-${stableHash(canonical)}`,
+          legacyIds: [legacyId, ...(legacyCompletionAliases.get(canonical) || [])],
+          category: pending.category,
+          text,
+        };
+        byCanonicalText.set(canonical, question);
+        parsed.push(question);
+      }
     }
     pending = null;
   };
@@ -129,6 +158,13 @@ function parseQuestions(source) {
     const line = repairText(rawLine);
     if (!line) {
       commit();
+      return;
+    }
+
+    const explicitHeading = line.match(/^#{1,6}\s+(.+)$/) || line.match(/^\[([^\]]+)\]$/);
+    if (explicitHeading) {
+      commit();
+      category = repairText(explicitHeading[1]);
       return;
     }
 
@@ -164,6 +200,18 @@ function parseQuestions(source) {
   return parsed;
 }
 
+function migrateCompletedQuestions() {
+  let changed = false;
+  questions.forEach((question) => {
+    if (completed.has(question.id)) return;
+    if (question.legacyIds.some((legacyId) => completed.has(legacyId))) {
+      completed.add(question.id);
+      changed = true;
+    }
+  });
+  if (changed) saveCompleted();
+}
+
 function populateCategories() {
   const categories = [...new Set(questions.map((question) => question.category))];
   categories.forEach((category) => {
@@ -191,11 +239,7 @@ function visibleQuestions() {
 }
 
 function updateProgress() {
-  const validIds = new Set(questions.map((question) => question.id));
-  completed = new Set([...completed].filter((id) => validIds.has(id)));
-  saveCompleted();
-
-  const done = completed.size;
+  const done = questions.filter((question) => completed.has(question.id)).length;
   const total = questions.length;
   const remaining = Math.max(0, total - done);
   const percent = total ? Math.round((done / total) * 100) : 0;
@@ -236,7 +280,10 @@ function createQuestionItem(question, index) {
   checkbox.setAttribute('aria-label', `Mark as complete: ${question.text}`);
   checkbox.addEventListener('change', () => {
     if (checkbox.checked) completed.add(question.id);
-    else completed.delete(question.id);
+    else {
+      completed.delete(question.id);
+      question.legacyIds.forEach((legacyId) => completed.delete(legacyId));
+    }
     item.classList.toggle('is-done', checkbox.checked);
     saveCompleted();
     updateProgress();
@@ -340,7 +387,10 @@ document.querySelector('#close-dialog').addEventListener('click', () => randomDi
 randomDialogCheck.addEventListener('change', () => {
   if (!randomSelection) return;
   if (randomDialogCheck.checked) completed.add(randomSelection.id);
-  else completed.delete(randomSelection.id);
+  else {
+    completed.delete(randomSelection.id);
+    randomSelection.legacyIds.forEach((legacyId) => completed.delete(legacyId));
+  }
   saveCompleted();
   updateProgress();
   renderQuestions();
@@ -376,6 +426,8 @@ async function initialize() {
     if (!response.ok) throw new Error(`Question file returned ${response.status}`);
     questions = parseQuestions(await response.text());
     if (!questions.length) throw new Error('No questions were found');
+    migrateCompletedQuestions();
+    console.info(`Loaded ${questions.length} unique questions; removed ${duplicatesRemoved} duplicates.`);
     populateCategories();
     updateProgress();
     renderQuestions();
