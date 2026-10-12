@@ -433,6 +433,7 @@ async function initialize() {
     updateProgress();
     renderQuestions();
     groupsElement.setAttribute('aria-busy', 'false');
+    chooseRandomQuestion();
   } catch (error) {
     console.error(error);
     groupsElement.hidden = true;
