@@ -1,10 +1,10 @@
-const CACHE_NAME = 'brave-voices-v8';
+const CACHE_NAME = 'brave-voices-v9';
 const CORE_ASSETS = [
   './',
   './index.html',
   './favicon.svg',
   './styles.css?v=2',
-  './app.js?v=7',
+  './app.js?v=8',
   './question.txt',
   './assets/speaking-adventure.png',
 ];
