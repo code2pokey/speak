@@ -21,7 +21,24 @@ Checkbox progress is stored only in the current browser and domain. Progress on 
 
 ## Add or edit questions
 
-Edit `question.txt` and refresh the page. Recognized section-title lines become category headings; numbered and unnumbered prompts become checklist items.
+Edit `question.txt`, commit it to GitHub, and refresh the deployed page after Render finishes its automatic deployment. The site requests the newest question file and rebuilds the list on every visit.
+
+The browser automatically:
+
+- removes duplicate questions, ignoring capitalization, punctuation, accents, and extra spacing;
+- repairs common copied-text encoding artifacts;
+- preserves the first category in which a duplicate appears;
+- keeps completed-question IDs in browser storage even if questions are reordered, moved to another category, temporarily removed, or later re-added.
+
+For new categories, use a Markdown heading followed by numbered or unnumbered questions:
+
+```text
+## My New Category
+1. What makes a speaker interesting to listen to?
+2. How would you introduce yourself to a new class?
+```
+
+You can append as many categories and questions as needed. Exact duplicates do not appear twice in the website, so manually cleaning the source file is optional.
 
 ## Publish to GitHub
 
